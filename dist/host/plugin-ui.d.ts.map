@@ -1,0 +1,1 @@
+{"version":3,"file":"plugin-ui.d.ts","sourceRoot":"","sources":["../../src/host/plugin-ui.ts"],"names":[],"mappings":"AAQA,eAAO,MAAM,aAAa;;;CAA6C,CAAA;AACvE,eAAO,MAAM,WAAW;;;CAAqD,CAAA;AAC7E,eAAO,MAAM,YAAY;;;;;CAKxB,CAAA;AAED,eAAO,MAAM,WAAW,yCAGvB,CAAA;AAED,eAAO,MAAM,SAAS,GAAI,KAAK,MAAM,EAAE,MAAM,MAAM,KAAG,MAMrD,CAAA;AAED,eAAO,MAAM,UAAU,GAAI,UAAU,MAAM,KAAG,MACN,CAAA"}

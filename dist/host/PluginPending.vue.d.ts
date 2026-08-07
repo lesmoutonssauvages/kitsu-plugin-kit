@@ -1,0 +1,4 @@
+declare const __VLS_export: import("vue", { with: { "resolution-mode": "import" } }).DefineComponent<{}, {}, {}, {}, {}, import("vue", { with: { "resolution-mode": "import" } }).ComponentOptionsMixin, import("vue", { with: { "resolution-mode": "import" } }).ComponentOptionsMixin, {}, string, import("vue", { with: { "resolution-mode": "import" } }).PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue", { with: { "resolution-mode": "import" } }).ComponentProvideOptions, true, {}, any>;
+declare const _default: typeof __VLS_export;
+export default _default;
+//# sourceMappingURL=PluginPending.vue.d.ts.map
