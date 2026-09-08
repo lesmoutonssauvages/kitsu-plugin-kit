@@ -20,16 +20,21 @@ const resolvePluginId = (explicit?: string): string | undefined => {
  *
  * `id` defaults to `__KITSU_PLUGIN_ID__` injected by `defineKitsuPluginConfig`
  * from the Zou `manifest.toml`.
+ *
+ * `slots` and `providers` are attached to the exported plugin object and
+ * applied by the host (not via context in `setup`).
  */
 export const definePlugin = (
   definition: KitsuPluginDefinition
 ): KitsuPlugin => {
-  const { messages, store, routes, slots, taskStatusSort, setup, teardown } =
+  const { messages, store, routes, slots, providers, setup, teardown } =
     definition
   const id = resolvePluginId(definition.id)
 
   const plugin: KitsuPlugin = {
     id,
+    slots,
+    providers,
 
     async activate(context: KitsuPluginContext) {
       const resolvedId = id ?? context.pluginId
@@ -48,12 +53,6 @@ export const definePlugin = (
         context.registerStoreModule(`kitsu-plugin-${context.pluginId}`, store)
       }
       if (routes) context.addRoutes(routes)
-      if (slots) {
-        for (const [slotName, component] of Object.entries(slots)) {
-          if (component) context.registerSlot(slotName, component)
-        }
-      }
-      if (taskStatusSort) context.registerTaskStatusSort(taskStatusSort)
       await setup?.(context)
     },
 

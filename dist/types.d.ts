@@ -3,11 +3,6 @@ import type { I18n } from 'vue-i18n';
 import type { Router, RouteRecordRaw } from 'vue-router';
 import type { KitsuPluginScope } from './route-names.js';
 /**
- * Sort override for ComboboxStatus (and any host UI that injects the sort key).
- * Receives the raw list and optional production id; must return a new/sorted array.
- */
-export type TaskStatusSortFn = (list: unknown[], productionId: string | null) => unknown[];
-/**
  * Minimal view of the host Vuex store. The kit deliberately does not import
  * Vuex's typings: Vuex 4 omits them from its package `exports`, so every
  * consumer would need a `declare module 'vuex'` shim just to read this file.
@@ -64,17 +59,6 @@ export interface KitsuPluginContext {
     registerStoreModule(name: string, module: KitsuStoreModuleDefinition): void;
     /** Runs on deactivation (unload, HMR), in reverse registration order. */
     onCleanup(cleanup: () => void | Promise<void>): void;
-    /**
-     * Registers a Vue component for a named slot in the host UI.
-     * Multiple plugins can register for the same slot; they are rendered in
-     * alphabetical order by plugin id.
-     */
-    registerSlot(slotName: string, component: Component): void;
-    /**
-     * Overrides ComboboxStatus sorting (and any host UI that injects
-     * `TASK_STATUS_SORT_KEY`). Last registration wins; cleaned up on deactivate.
-     */
-    registerTaskStatusSort(fn: TaskStatusSortFn): void;
 }
 export interface KitsuPluginDefinition {
     /**
@@ -87,18 +71,25 @@ export interface KitsuPluginDefinition {
     store?: KitsuStoreModuleDefinition;
     routes?: KitsuPluginRoutes;
     /**
-     * Components to inject into named host UI slots.
-     * Keys are slot names (e.g. `'action-panel'`), values are Vue components.
+     * Components for named host UI slots. Keys are slot names, optionally with
+     * a position suffix (`'action-topbar-menu:before'`, `'action-topbar-menu:after'`).
+     * Applied by the host; not available via context in `setup`.
      */
     slots?: Partial<Record<string, Component>>;
-    /** Overrides task-status sorting in ComboboxStatus while this plugin is active. */
-    taskStatusSort?: TaskStatusSortFn;
+    /**
+     * Host provide overrides, keyed by string
+     * (e.g. `'ComboboxStatus.sortedTaskStatusList'`). Applied by the host;
+     * not available via context in `setup`.
+     */
+    providers?: Record<string, unknown>;
     setup?: (context: KitsuPluginContext) => void | Promise<void>;
     teardown?: (context: KitsuPluginContext) => void | Promise<void>;
 }
 /** Raw contract the host expects as the bundle's default export. */
 export interface KitsuPlugin {
     id?: string;
+    slots?: Partial<Record<string, Component>>;
+    providers?: Record<string, unknown>;
     activate(context: KitsuPluginContext): Promise<void>;
     deactivate(context: KitsuPluginContext): Promise<void>;
 }

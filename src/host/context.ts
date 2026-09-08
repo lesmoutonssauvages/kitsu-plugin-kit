@@ -6,11 +6,6 @@ import type {
 } from 'vue-router'
 
 import { PLUGIN_CONTEXT_META_KEY } from '../context.js'
-import { registerSlot, unregisterSlot } from './slots.js'
-import {
-  registerTaskStatusSort,
-  unregisterTaskStatusSort
-} from './task-status-sort.js'
 import {
   PLUGIN_SCOPE_PARENTS,
   pluginRouteName,
@@ -163,16 +158,6 @@ export const createPluginContext = (
 
     onCleanup: cleanup => {
       cleanups.push(cleanup)
-    },
-
-    registerSlot: (slotName, component) => {
-      registerSlot(slotName, pluginId, component)
-      cleanups.push(() => unregisterSlot(slotName, pluginId, component))
-    },
-
-    registerTaskStatusSort: fn => {
-      registerTaskStatusSort(pluginId, fn)
-      cleanups.push(() => unregisterTaskStatusSort(pluginId))
     },
 
     addMessages: messages => {

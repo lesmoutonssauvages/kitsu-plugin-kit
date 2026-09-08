@@ -14,6 +14,5 @@ interface SlotEntry {
 export declare const slotRegistry: import("vue").Ref<Record<string, SlotEntry[]>, Record<string, SlotEntry[]>>;
 export declare const registerSlot: (slotName: string, pluginId: string, component: Component) => void;
 export declare const unregisterSlot: (slotName: string, pluginId: string, component: Component) => void;
-export declare const getSlotEntries: (slotName: string) => SlotEntry[];
 export {};
 //# sourceMappingURL=slots.d.ts.map

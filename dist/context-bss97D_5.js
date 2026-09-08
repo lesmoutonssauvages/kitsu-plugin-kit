@@ -12,11 +12,11 @@ var n = "kitsuPlugin", r = () => {
 	return {
 		state: e(() => {
 			let e = t.value, r = n();
-			if (!(!e || !r)) return e.store.state[r];
+			if (e && r) return e.store.state[r];
 		}),
 		commit: (e, r) => {
 			let i = t.value, a = n();
-			!i || !a || i.store.commit(`${a}/${e}`, r);
+			i && a && i.store.commit(`${a}/${e}`, r);
 		},
 		dispatch: (e, r) => {
 			let i = t.value, a = n();
@@ -27,4 +27,4 @@ var n = "kitsuPlugin", r = () => {
 //#endregion
 export { r as n, i as r, n as t };
 
-//# sourceMappingURL=context-BaodsMri.js.map
+//# sourceMappingURL=context-bss97D_5.js.map

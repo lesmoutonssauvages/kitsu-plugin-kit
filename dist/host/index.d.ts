@@ -14,10 +14,5 @@ export declare const kitsuPlugins: {
 };
 export { PluginHost } from './components.js';
 export { default as PluginsSlot } from './PluginsSlot.vue';
-export { activatePlugins } from './runtime.js';
-export { getSlotEntries, slotRegistry } from './slots.js';
-export { TASK_STATUS_SORT_KEY, taskStatusSortFn } from './task-status-sort.js';
-export type { TaskStatusSortFn } from './task-status-sort.js';
-export { findPlugin, pluginStates } from './state.js';
 export type { KitsuHost, PluginState, PluginStates, PluginStatus } from './types.js';
 //# sourceMappingURL=index.d.ts.map

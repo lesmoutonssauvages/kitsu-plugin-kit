@@ -1,7 +1,7 @@
 import type { App } from 'vue'
 
+import { installProviders } from './providers.js'
 import { installPluginRuntime } from './runtime.js'
-import { TASK_STATUS_SORT_KEY, taskStatusSortFn } from './task-status-sort.js'
 import type { KitsuHost } from './types.js'
 
 export type KitsuPluginsOptions = Omit<KitsuHost, 'app'>
@@ -16,18 +16,13 @@ export type KitsuPluginsOptions = Omit<KitsuHost, 'app'>
  */
 export const kitsuPlugins = {
   install(app: App, options: KitsuPluginsOptions) {
-    app.provide(TASK_STATUS_SORT_KEY, taskStatusSortFn)
+    installProviders(app)
     installPluginRuntime({ app, ...options })
   }
 }
 
 export { PluginHost } from './components.js'
 export { default as PluginsSlot } from './PluginsSlot.vue'
-export { activatePlugins } from './runtime.js'
-export { getSlotEntries, slotRegistry } from './slots.js'
-export { TASK_STATUS_SORT_KEY, taskStatusSortFn } from './task-status-sort.js'
-export type { TaskStatusSortFn } from './task-status-sort.js'
-export { findPlugin, pluginStates } from './state.js'
 export type {
   KitsuHost,
   PluginState,

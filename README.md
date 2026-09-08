@@ -1,8 +1,9 @@
 # kitsu-plugin-kit
 
-Authoring kit for **injected** Kitsu frontend plugins: plugins that run inside
-the Kitsu app instead of inside an iframe, sharing its Vue instance, router,
-Vuex store and i18n.
+Authoring and host runtime for **injected** Kitsu frontend plugins: Vue
+bundles that run inside the Kitsu app (shared Vue / router / Vuex / i18n)
+instead of an iframe. Plugins declare routes, store modules, UI slots, and
+host `provide` overrides; the kit loads them into Kitsu.
 
 Zou marks a plugin as injected when
 `PLUGIN_FOLDER/<id>/frontend/dist/plugin.js` exists. The user-context field
@@ -13,11 +14,19 @@ the plugin does not need this kit.
 Navigation still comes from the manifest: `frontend_studio_enabled` (studio
 sidebar) and `frontend_project_enabled` (production topbar).
 
-The kit is written in TypeScript (with Vue SFCs for the host UI) and consumed
-from `dist/`, built by Vite + `vue-tsc` on install (`prepare`). Run `pnpm build`
-(or `pnpm watch`) after editing `src/`, and `pnpm lint` / `pnpm format` before
-committing. Linting is type-aware (`typescript-eslint`) and formatting follows
-Kitsu's own Prettier settings.
+Package layout:
+
+| Import | Role |
+| ------ | ---- |
+| `kitsu-plugin-kit` | Plugin authoring (`definePlugin`, store/context helpers) |
+| `kitsu-plugin-kit/vite` | Plugin Vite config (`defineKitsuPluginConfig`) |
+| `kitsu-plugin-kit/host` | Kitsu host (`kitsuPlugins`, `PluginHost`, `PluginsSlot`) |
+| `kitsu-plugin-kit/host/vite` | Host Vite helper (`kitsuPluginsDev`) |
+
+This package uses **npm** (`package-lock.json`). Install with `npm install`.
+After editing `src/`, run `npm run build` (or `npm run watch`), and
+`npm run lint` / `npm run format` before committing. The `prepare` script
+builds `dist/` on install.
 
 ## Runtime contract
 
@@ -30,13 +39,16 @@ export default {
 }
 ```
 
-`definePlugin()` builds that object from a declarative definition:
+`definePlugin()` builds that object from a declarative definition. `slots` and
+`providers` are attached to the export and applied by the host (not via
+imperative APIs on `setup` context):
 
 ```ts
 // src/index.ts
 import { definePlugin } from 'kitsu-plugin-kit'
 
-import ActionPanelExtra from './components/ActionPanelExtra.vue'
+import ActionPanelExtraAfter from './components/ActionPanelExtraAfter.vue'
+import ActionPanelExtraBefore from './components/ActionPanelExtraBefore.vue'
 import en from './locales/en'
 import { myModule } from './stores/main'
 
@@ -44,10 +56,13 @@ export default definePlugin({
   messages: { en },
   store: myModule,
   slots: {
-    'action-panel': ActionPanelExtra
+    'action-topbar-menu:before': ActionPanelExtraBefore,
+    'action-topbar-menu:after': ActionPanelExtraAfter
   },
-  taskStatusSort: (list, productionId) =>
-    [...list].sort((a, b) => /* custom order */ 0),
+  providers: {
+    'ComboboxStatus.sortedTaskStatusList': (list, productionId) =>
+      [...list].sort((a, b) => /* custom order */ 0)
+  },
   routes: {
     studio: [
       { path: '', name: 'index', component: () => import('./views/Studio.vue') }
@@ -67,8 +82,8 @@ export default definePlugin({
 ```
 
 Everything declared here is undone on deactivation (unload, HMR): routes are
-removed, the store module is unregistered, slots and the task-status sort
-override are cleared, and `context.onCleanup()` callbacks run in reverse order.
+removed, the store module is unregistered, slots and host provider overrides are
+cleared, and `context.onCleanup()` callbacks run in reverse order.
 
 The Zou plugin `id` comes from the parent `manifest.toml` via
 `defineKitsuPluginConfig` (injected as `__KITSU_PLUGIN_ID__`). Pass `id` to
@@ -173,43 +188,57 @@ const context = usePluginContext()
 ## Slots
 
 Injected plugins can mount Vue components into named host UI slots. Kitsu
-exposes `action-panel` in `ActionPanel.vue` via
-`<plugins-slot slot-name="action-panel" />` (left of Status / Assign / … when
-tasks are selected).
+exposes `action-topbar-menu` in `ActionPanel.vue` via:
 
-Declare slots in `definePlugin`, or register at runtime:
+```vue
+<plugins-slot
+  slot-name="action-topbar-menu"
+  is="div"
+  class="menu flexrow"
+>
+  <!-- host menu items -->
+</plugins-slot>
+```
+
+Plugin contributions use a position suffix. Render order is
+**before → host content → after**:
 
 ```ts
 export default definePlugin({
   slots: {
-    'action-panel': ActionPanelExtra
-  },
-  setup(context) {
-    // equivalent imperative API
-    // context.registerSlot('action-panel', ActionPanelExtra)
+    'action-topbar-menu:before': ActionPanelExtraBefore,
+    'action-topbar-menu:after': ActionPanelExtraAfter
   }
 })
 ```
 
-Multiple plugins may fill the same slot; they render in alphabetical order by
-`pluginId`. Registrations are removed on deactivate / HMR.
+Multiple plugins may fill the same key; they render in alphabetical order by
+`pluginId`. Slots are applied by the host from the declarative map only (no
+imperative `registerSlot` on `setup`). Registrations are removed on deactivate /
+HMR.
 
-## Task status sort
+## Providers
 
-`taskStatusSort` overrides how `ComboboxStatus` orders task statuses. It is a
-**sort** override, not a list filter: the host still passes the full list; your
-function must return the ordered array.
+Plugins can override host `provide`/`inject` values via a declarative
+`providers` map. Keys are plain strings (`<HostComponent>.<member>`); values
+are opaque (`unknown`). The host applies them on activation — there is no
+register API on `setup` context.
 
 ```ts
 export default definePlugin({
-  taskStatusSort: (list, productionId) =>
-    [...list].sort((a, b) => String(a.short_name).localeCompare(String(b.short_name)))
+  providers: {
+    'ComboboxStatus.sortedTaskStatusList': (list, productionId) =>
+      [...list].sort((a, b) =>
+        String(a.short_name).localeCompare(String(b.short_name))
+      )
+  }
 })
 ```
 
-Or in `setup`: `context.registerTaskStatusSort(fn)`. Last registration wins.
-While active, `ComboboxStatus` uses your function instead of Kitsu’s default
-`sortTaskStatuses`. On deactivate / HMR the override is cleared.
+Example: `ComboboxStatus` injects `'ComboboxStatus.sortedTaskStatusList'` and,
+when a value is present, uses it to order task statuses instead of Kitsu’s
+default `sortTaskStatuses`. Last plugin to set a given key wins; on deactivate /
+HMR the value is cleared.
 
 ## Build
 
@@ -238,14 +267,18 @@ version mismatch means missing or extra names.
 Each plugin runs its **own Vite instance**. Point Kitsu at those entries:
 
 ```sh
-# terminals
-pnpm -F my-plugin-frontend dev     # :5173
-pnpm -F other-plugin-frontend dev  # :5174
+# terminal 1 — plugin frontend
+cd path/to/my-plugin/frontend && npm run dev   # e.g. :5173
 
+# terminal 2 — another plugin (optional)
+cd path/to/other-plugin/frontend && npm run dev   # e.g. :5174
+
+# terminal 3 — Kitsu
+cd path/to/kitsu
 KITSU_PLUGIN_DEV_URLS=\
 my-plugin=http://127.0.0.1:5173/src/index.ts,\
 other-plugin=http://127.0.0.1:5174/src/index.ts \
-  pnpm -F kitsu dev
+  npm run dev
 ```
 
 The host `import()`s those URLs (CORS is open on the plugin servers). Vue /
@@ -256,11 +289,12 @@ the plugin in place.
 Alternatively, compile plugin sources inside Kitsu's Vite (single graph):
 
 ```sh
-KITSU_PLUGIN_DEV_PATHS=../../zou-plugins/*/frontend pnpm -F kitsu dev
+KITSU_PLUGIN_DEV_PATHS=../../zou-plugins/*/frontend npm run dev
 ```
 
-To exercise the real bundle instead, run `vite build --watch` and let Zou serve
-`dist/`; the host then reloads the built `plugin.js`.
+To exercise the real bundle instead, run `npm run watch` (or
+`vite build --watch`) in the plugin frontend and let Zou serve `dist/`; the
+host then reloads the built `plugin.js`.
 
 **HMR note:** Zou still needs `frontend/dist/plugin.js` on disk (a built file
 or a stub) so the user context returns `injected: true`. Dev URLs only replace
@@ -286,7 +320,7 @@ zou install-plugin --path ./kitsu-tickets
 ### 1. Frontend injection
 
 1. Build the plugin frontend with `defineKitsuPluginConfig()` so
-   `frontend/dist/plugin.js` exists.
+   `frontend/dist/plugin.js` exists (`npm run build` in the plugin frontend).
 2. Install: `zou install-plugin --path /path/to/plugin` (use `--force` to
    upgrade), then restart Zou.
 3. Confirm `PLUGIN_FOLDER/<id>/frontend/dist/plugin.js` is present and served
@@ -298,20 +332,19 @@ zou install-plugin --path ./kitsu-tickets
 6. Negative check: remove or rename `plugin.js`, restart Zou, reload context →
    `"injected": false` → iframe to `/api/plugins/<id>/frontend/`.
 
-### 2. Slot injection (`action-panel`)
+### 2. Slot injection (`action-topbar-menu`)
 
-1. Register a visible component via `slots: { 'action-panel': … }` (or
-   `registerSlot`) in an injected plugin.
+1. Declare `slots: { 'action-topbar-menu:before': … }` and/or
+   `'action-topbar-menu:after'` in an injected plugin.
 2. Load the plugin (step 1 above, or HMR with a stub `plugin.js`).
 3. Select one or more tasks so `ActionPanel` appears.
-4. Expect your UI at the start of the action topbar menu (before Status /
-   Assign / …).
+4. Expect your UI before and/or after the host menu items (Status / Assign / …).
 5. Deactivate / HMR unload → the slot content disappears.
 
-### 3. Task status sort (`ComboboxStatus`)
+### 3. Provider override (`ComboboxStatus.sortedTaskStatusList`)
 
-1. Register `taskStatusSort` (or `registerTaskStatusSort`) with an order that
-   is obviously different from Kitsu’s default.
+1. Declare `providers: { 'ComboboxStatus.sortedTaskStatusList': fn }` with an
+   order that is obviously different from Kitsu’s default.
 2. Load the injected plugin.
 3. Open any `ComboboxStatus` (ActionPanel “change status”, task UI, …).
 4. Expect the dropdown order to follow your function.

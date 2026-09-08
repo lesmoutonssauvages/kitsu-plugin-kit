@@ -46,6 +46,3 @@ export const unregisterSlot = (
   }
   slotRegistry.value = updated
 }
-
-export const getSlotEntries = (slotName: string): SlotEntry[] =>
-  slotRegistry.value[slotName] ?? []

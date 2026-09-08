@@ -15,6 +15,8 @@ import {
 import type { KitsuPlugin, KitsuPluginManifest } from '../types.js'
 import { PluginPending } from './components.js'
 import { createPluginContext, type PluginContextHandle } from './context.js'
+import { applySlots } from './apply-slots.js'
+import { applyProviders } from './providers.js'
 import { installI18n } from './i18n.js'
 import { installPluginNavigation } from './navigation.js'
 import { publishSharedModules } from './shared.js'
@@ -120,7 +122,18 @@ const activatePlugin = async (
     }
 
     const handle = createPluginContext(host, plugin)
-    await definition.activate(handle.context)
+    try {
+      applySlots(pluginId, definition.slots, cleanup => {
+        handle.context.onCleanup(cleanup)
+      })
+      applyProviders(pluginId, definition.providers, cleanup => {
+        handle.context.onCleanup(cleanup)
+      })
+      await definition.activate(handle.context)
+    } catch (error) {
+      await handle.dispose()
+      throw error
+    }
 
     active.set(pluginId, { definition, ...handle })
     pluginStates[pluginId] = { status: 'active', error: null }

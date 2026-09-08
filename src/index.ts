@@ -13,8 +13,7 @@ export type {
   KitsuPluginManifest,
   KitsuPluginMessages,
   KitsuPluginRoutes,
-  KitsuStoreModuleDefinition,
-  TaskStatusSortFn
+  KitsuStoreModuleDefinition
 } from './types.js'
-// Host UI helpers (`PluginsSlot`, `TASK_STATUS_SORT_KEY`, …) are exported from
+// Host UI helpers (`PluginsSlot`, …) are exported from
 // `kitsu-plugin-kit/host` so this entry's .d.ts stays plain TypeScript only.

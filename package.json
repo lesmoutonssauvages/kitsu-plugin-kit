@@ -2,7 +2,7 @@
   "name": "kitsu-plugin-kit",
   "version": "1.0.0",
   "type": "module",
-  "description": "Authoring kit for injected Kitsu frontend plugins.",
+  "description": "Authoring kit and Kitsu host runtime for injected frontend plugins (routes, Vuex, UI slots, provide/inject providers).",
   "repository": {
     "type": "git",
     "url": "https://github.com/lesmoutonssauvages/kitsu-plugin-kit.git"
