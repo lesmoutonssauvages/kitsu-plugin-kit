@@ -48,7 +48,7 @@ export const applyProviders = (
     holder.value =
       value !== null &&
       (typeof value === 'object' || typeof value === 'function')
-        ? markRaw(value as object)
+        ? markRaw(value)
         : value
     onCleanup(() => {
       if (owners.get(key) !== pluginId) return

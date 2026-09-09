@@ -5,7 +5,14 @@
       v-for="entry in beforeEntries"
       :key="`before-${entry.pluginId}`"
     />
-    <slot />
+    <slot v-if="showHost" />
+    <template v-else>
+      <component
+        :is="entry.component"
+        v-for="entry in insteadEntries"
+        :key="`instead-${entry.pluginId}`"
+      />
+    </template>
     <component
       :is="entry.component"
       v-for="entry in afterEntries"
@@ -18,7 +25,14 @@
       v-for="entry in beforeEntries"
       :key="`before-${entry.pluginId}`"
     />
-    <slot />
+    <slot v-if="showHost" />
+    <template v-else>
+      <component
+        :is="entry.component"
+        v-for="entry in insteadEntries"
+        :key="`instead-${entry.pluginId}`"
+      />
+    </template>
     <component
       :is="entry.component"
       v-for="entry in afterEntries"
@@ -46,7 +60,11 @@ const attrs = useAttrs()
 const beforeEntries = computed(
   () => slotRegistry.value[`${props.slotName}:before`] ?? []
 )
+const insteadEntries = computed(
+  () => slotRegistry.value[props.slotName] ?? []
+)
 const afterEntries = computed(
   () => slotRegistry.value[`${props.slotName}:after`] ?? []
 )
+const showHost = computed(() => insteadEntries.value.length === 0)
 </script>

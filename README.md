@@ -200,13 +200,25 @@ exposes `action-topbar-menu` in `ActionPanel.vue` via:
 </plugins-slot>
 ```
 
-Plugin contributions use a position suffix. Render order is
-**before → host content → after**:
+`is` is optional. With `is`, contributions and host content are wrapped in that
+element or component (attrs such as `class` apply to it). Without `is`,
+`PluginsSlot` renders a fragment — no wrapper DOM node:
+
+```vue
+<plugins-slot slot-name="action-topbar-menu">
+  <!-- host menu items -->
+</plugins-slot>
+```
+
+Plugin keys are the slot name, optionally with a position suffix. Render order
+is **before → (bare key | host content) → after**. A bare key replaces the
+host default; `:before` / `:after` still wrap around that replacement:
 
 ```ts
 export default definePlugin({
   slots: {
     'action-topbar-menu:before': ActionPanelExtraBefore,
+    'action-topbar-menu': ActionPanelReplacement,
     'action-topbar-menu:after': ActionPanelExtraAfter
   }
 })

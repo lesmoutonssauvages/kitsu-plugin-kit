@@ -3,8 +3,9 @@ import type { Component } from 'vue'
 import { registerSlot, unregisterSlot } from './slots.js'
 
 /**
- * Applies a plugin's declarative `slots` map. Keys may include position
- * suffixes (`name:before`, `name:after`). Cleanup unregisters on deactivate.
+ * Applies a plugin's declarative `slots` map. Bare keys replace host content;
+ * `:before` / `:after` suffixes wrap around it. Cleanup unregisters on
+ * deactivate.
  */
 export const applySlots = (
   pluginId: string,

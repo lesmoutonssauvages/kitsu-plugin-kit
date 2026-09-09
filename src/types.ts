@@ -84,9 +84,11 @@ export interface KitsuPluginDefinition {
   store?: KitsuStoreModuleDefinition
   routes?: KitsuPluginRoutes
   /**
-   * Components for named host UI slots. Keys are slot names, optionally with
-   * a position suffix (`'action-topbar-menu:before'`, `'action-topbar-menu:after'`).
-   * Applied by the host; not available via context in `setup`.
+   * Components for named host UI slots. The bare slot name replaces host
+   * content; `:before` / `:after` suffixes wrap around it
+   * (`'action-topbar-menu'`, `'action-topbar-menu:before'`,
+   * `'action-topbar-menu:after'`). Applied by the host; not available via
+   * context in `setup`.
    */
   slots?: Partial<Record<string, Component>>
   /**
