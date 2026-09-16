@@ -1,8 +1,13 @@
+import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import vue from '@vitejs/plugin-vue'
-import type { ServerOptions, UserConfig } from 'vite'
+import {
+  searchForWorkspaceRoot,
+  type ServerOptions,
+  type UserConfig
+} from 'vite'
 
 import { kitsuInlineCss } from './inline-css.js'
 import { readManifestPluginId } from './manifest-id.js'
@@ -24,11 +29,24 @@ type VueOptions = Parameters<typeof vue>[0]
  * Uses `@lesmoutonssauvages/kitsu-plugin-kit/vite` (a declared export) so this survives the kit's
  * own lib build — `import.meta.url` + `../src/index.ts` gets evaluated at
  * bundle time and breaks in the published `dist/vite/index.js`.
+ *
+ * The published package ships `src/` (not `dist/`); `prepare` builds `dist/` on install.
  */
-const resolveKitSourceEntry = (frontendRoot: string): string => {
+const resolveKitPackageRoot = (frontendRoot: string): string => {
   const require = createRequire(path.join(frontendRoot, 'package.json'))
   const viteEntry = require.resolve('@lesmoutonssauvages/kitsu-plugin-kit/vite')
-  return path.join(path.dirname(viteEntry), '..', '..', 'src', 'index.ts')
+  return path.join(path.dirname(viteEntry), '..', '..')
+}
+
+const resolveKitSourceEntry = (packageRoot: string): string => {
+  const sourceEntry = path.join(packageRoot, 'src', 'index.ts')
+  if (fs.existsSync(sourceEntry)) return sourceEntry
+  const distEntry = path.join(packageRoot, 'dist', 'index.js')
+  if (fs.existsSync(distEntry)) return distEntry
+  throw new Error(
+    `kitsu-plugin-kit: missing ${sourceEntry} (and no dist fallback). ` +
+      `Install a kit that ships src/, or run prepare/build in the kit package.`
+  )
 }
 
 /** URL Zou serves the plugin `dist/` folder from. */
@@ -78,6 +96,8 @@ export const defineKitsuPluginConfig = (
 
   const frontendRoot = root ?? process.cwd()
   const pluginId = options.pluginId ?? readManifestPluginId(frontendRoot)
+  const kitPackageRoot = resolveKitPackageRoot(frontendRoot)
+  const kitSourceEntry = resolveKitSourceEntry(kitPackageRoot)
 
   return {
     // Overridden to `/` while serving (see plugin below): the browser loads
@@ -87,6 +107,17 @@ export const defineKitsuPluginConfig = (
     publicDir: false,
     define: {
       __KITSU_PLUGIN_ID__: JSON.stringify(pluginId)
+    },
+    // Dev: resolve the kit from source so `__KITSU_PLUGIN_ID__` is applied.
+    // Prebuilt `dist/` (and the dep prebundle) skip Vite defines. Keep these
+    // at top-level so Vite merges them before optimizeDeps / fs checks.
+    resolve: {
+      alias: {
+        '@lesmoutonssauvages/kitsu-plugin-kit': kitSourceEntry
+      }
+    },
+    optimizeDeps: {
+      exclude: ['@lesmoutonssauvages/kitsu-plugin-kit']
     },
     plugins: [
       vue(vueOptions),
@@ -98,29 +129,20 @@ export const defineKitsuPluginConfig = (
           if (env.command !== 'serve') return
           return { base: '/' }
         }
-      },
-      {
-        // Dev: resolve the kit from source so this config's `define`
-        // (`__KITSU_PLUGIN_ID__`) is applied. Prebuilt `dist/` loaded via
-        // `/@fs/...` skips Vite defines and leaves the id empty at runtime.
-        name: 'kitsu-plugin-kit-dev-source',
-        config(_config, env) {
-          if (env.command !== 'serve') return
-          return {
-            resolve: {
-              alias: {
-                '@lesmoutonssauvages/kitsu-plugin-kit':
-                  resolveKitSourceEntry(frontendRoot)
-              }
-            }
-          }
-        }
       }
     ],
     server: {
       host: true,
       cors: true,
-      ...server
+      ...server,
+      fs: {
+        ...server?.fs,
+        allow: [
+          searchForWorkspaceRoot(frontendRoot),
+          kitPackageRoot,
+          ...(server?.fs?.allow ?? [])
+        ]
+      }
     },
     build: {
       target: 'es2020',
