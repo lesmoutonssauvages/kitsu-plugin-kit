@@ -25,8 +25,12 @@ Package layout:
 
 This package uses **npm** (`package-lock.json`). Install with `npm install`.
 After editing `src/`, run `npm run build` (or `npm run watch`), and
-`npm run lint` / `npm run format` before committing. The `prepare` script
-builds `dist/` on install.
+`npm run lint` / `npm run format` before committing.
+
+The npm tarball ships **`src/`** (not `dist/`). The `prepare` script runs
+`npm run build` on install so consumers get a local `dist/` for `exports`.
+Plugin Vite `serve` aliases the kit to `src/index.ts` so `__KITSU_PLUGIN_ID__`
+is applied under HMR.
 
 ## Runtime contract
 
