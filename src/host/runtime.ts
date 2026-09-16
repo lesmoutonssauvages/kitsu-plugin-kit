@@ -1,11 +1,6 @@
 import { watch } from 'vue'
 import type { RouteLocationNormalized } from 'vue-router'
 
-// Dev only: plugin sources compiled by Kitsu's own Vite server. Provided by
-// the `kitsuPluginsDev` Vite plugin; empty when plugins run their own Vite
-// (`KITSU_PLUGIN_DEV_URLS`) or in production builds.
-import { devPlugins } from 'virtual:kitsu-plugins-dev'
-
 import { PLUGIN_CONTEXT_META_KEY } from '../context.js'
 import {
   PLUGIN_SCOPE_PARENTS,
@@ -30,6 +25,25 @@ import {
 import type { KitsuHost } from './types.js'
 
 declare const __KITSU_PLUGIN_DEV_URLS__: string
+
+type DevPlugins = Record<string, () => Promise<unknown>>
+
+/**
+ * Plugin sources compiled by Kitsu's own Vite (`KITSU_PLUGIN_DEV_PATHS`).
+ * The specifier is resolved by `kitsuPluginsDev`; outside that graph (Node
+ * smoke, tests) the `virtual:` scheme is not a valid ESM URL, so keep this
+ * a dynamic import with a fallback instead of a static one.
+ */
+let devPluginsPromise: Promise<DevPlugins> | null = null
+
+const loadDevPlugins = (): Promise<DevPlugins> => {
+  if (!devPluginsPromise) {
+    devPluginsPromise = import('virtual:kitsu-plugins-dev')
+      .then(mod => mod.devPlugins)
+      .catch(() => ({}))
+  }
+  return devPluginsPromise
+}
 
 /** Dev Vite URLs that are down must not freeze the host router forever. */
 const IMPORT_TIMEOUT_MS = 4_000
@@ -87,18 +101,20 @@ const importPluginModule = (plugin: KitsuPluginManifest) => {
     )
   }
 
-  const loadFromSource = devPlugins[plugin.plugin_id]
-  if (loadFromSource) return loadFromSource()
+  return loadDevPlugins().then(devPlugins => {
+    const loadFromSource = devPlugins[plugin.plugin_id]
+    if (loadFromSource) return loadFromSource()
 
-  const version = encodeURIComponent(plugin.version ?? '')
-  return withTimeout(
-    import(
-      /* @vite-ignore */
-      `/api/plugins/${plugin.plugin_id}/frontend/plugin.js?v=${version}`
-    ),
-    IMPORT_TIMEOUT_MS,
-    `plugin bundle at /api/plugins/${plugin.plugin_id}/frontend/plugin.js did not load`
-  )
+    const version = encodeURIComponent(plugin.version ?? '')
+    return withTimeout(
+      import(
+        /* @vite-ignore */
+        `/api/plugins/${plugin.plugin_id}/frontend/plugin.js?v=${version}`
+      ),
+      IMPORT_TIMEOUT_MS,
+      `plugin bundle at /api/plugins/${plugin.plugin_id}/frontend/plugin.js did not load`
+    )
+  })
 }
 
 const activatePlugin = async (
