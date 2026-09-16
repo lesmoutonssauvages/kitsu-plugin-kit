@@ -126,8 +126,9 @@ export interface KitsuPluginsDevOptions {
   paths?: string
   /**
    * Comma-separated `id=url` pairs pointing at each plugin's own Vite server
-   * entry (e.g. `my-plugin=http://127.0.0.1:5173/src/index.ts`). Takes
-   * precedence over filesystem discovery when both are set.
+   * (e.g. `my-plugin=http://127.0.0.1:5173`). Origin-only URLs get
+   * `/src/index.ts` appended; a full path overrides that default.
+   * Takes precedence over filesystem discovery when both are set.
    * Defaults to KITSU_PLUGIN_DEV_URLS.
    */
   urls?: string

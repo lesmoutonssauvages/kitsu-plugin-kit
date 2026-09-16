@@ -55,7 +55,26 @@ interface ActiveEntry extends PluginContextHandle {
 const active = new Map<string, ActiveEntry>()
 const inFlight = new Map<string, Promise<void>>()
 
-/** `my-plugin=http://127.0.0.1:5173/src/index.ts,other=...` → map */
+/** Default Vite entry when DEV_URLS gives only an origin (matches defineKitsuPluginConfig). */
+const DEFAULT_DEV_ENTRY = '/src/index.ts'
+
+/**
+ * Origin-only URLs (`http://127.0.0.1:5173` or `…/`) get `/src/index.ts`.
+ * Paths already set (custom entry) are left alone. Invalid URLs stay raw.
+ */
+const normalizeDevUrl = (value: string): string => {
+  try {
+    const url = new URL(value)
+    if (url.pathname === '' || url.pathname === '/') {
+      url.pathname = DEFAULT_DEV_ENTRY
+    }
+    return url.href
+  } catch {
+    return value
+  }
+}
+
+/** `my-plugin=http://127.0.0.1:5173,other=http://127.0.0.1:5174/src/main.ts` → map */
 const parseDevUrls = (spec: string): Record<string, string> => {
   const urls: Record<string, string> = {}
   for (const item of spec.split(',')) {
@@ -63,7 +82,9 @@ const parseDevUrls = (spec: string): Record<string, string> => {
     if (!trimmed) continue
     const separator = trimmed.indexOf('=')
     if (separator === -1) continue
-    urls[trimmed.slice(0, separator)] = trimmed.slice(separator + 1)
+    urls[trimmed.slice(0, separator)] = normalizeDevUrl(
+      trimmed.slice(separator + 1)
+    )
   }
   return urls
 }

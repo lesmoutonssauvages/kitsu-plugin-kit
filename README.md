@@ -292,10 +292,13 @@ cd path/to/other-plugin/frontend && npm run dev   # e.g. :5174
 # terminal 3 — Kitsu
 cd path/to/kitsu
 KITSU_PLUGIN_DEV_URLS=\
-my-plugin=http://127.0.0.1:5173/src/index.ts,\
-other-plugin=http://127.0.0.1:5174/src/index.ts \
+my-plugin=http://127.0.0.1:5173,\
+other-plugin=http://127.0.0.1:5174 \
   npm run dev
 ```
+
+Origin-only URLs load `/src/index.ts` (the default plugin Vite entry). Pass a
+full path to override, e.g. `my-plugin=http://127.0.0.1:5173/src/main.ts`.
 
 The host `import()`s those URLs (CORS is open on the plugin servers). Vue /
 router / store / i18n still come from the host via `globalThis.__KITSU_SHARED__`.
