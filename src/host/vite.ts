@@ -44,7 +44,7 @@ const findEntry = (directory: string): string | null =>
   ) ?? null
 
 /**
- * A plugin imports `kitsu-plugin-kit` and its own dependencies by bare
+ * A plugin imports `@lesmoutonssauvages/kitsu-plugin-kit` and its own dependencies by bare
  * specifier, which resolve from the plugin package and not from Kitsu.
  * Mounting only `src` (a common mistake in containers) leaves the sources
  * visible but impossible to compile, so say so here instead of failing on the
@@ -54,10 +54,10 @@ const unusableReason = (directory: string): string | null => {
   const manifest = path.join(directory, 'package.json')
   if (!fs.existsSync(manifest)) return 'no package.json next to src/'
   try {
-    createRequire(manifest).resolve('kitsu-plugin-kit')
+    createRequire(manifest).resolve('@lesmoutonssauvages/kitsu-plugin-kit')
     return null
   } catch {
-    return 'cannot resolve kitsu-plugin-kit; run pnpm install, then build the kit'
+    return 'cannot resolve @lesmoutonssauvages/kitsu-plugin-kit; run npm install, then build the kit'
   }
 }
 
@@ -165,7 +165,7 @@ export const kitsuPluginsDev = ({
         },
         // The host runtime imports the virtual module above, which esbuild
         // cannot follow if the kit gets prebundled.
-        optimizeDeps: { exclude: ['kitsu-plugin-kit'] }
+        optimizeDeps: { exclude: ['@lesmoutonssauvages/kitsu-plugin-kit'] }
       }
 
       // URL mode does not need filesystem discovery.

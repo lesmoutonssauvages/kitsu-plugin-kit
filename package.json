@@ -1,6 +1,6 @@
 {
-  "name": "kitsu-plugin-kit",
-  "version": "1.0.0",
+  "name": "@lesmoutonssauvages/kitsu-plugin-kit",
+  "version": "0.0.1",
   "type": "module",
   "description": "Authoring kit and Kitsu host runtime for injected frontend plugins (routes, Vuex, UI slots, provide/inject providers).",
   "repository": {
@@ -33,6 +33,10 @@
     }
   },
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "files": [
     "dist",
     "README.md"
@@ -42,7 +46,10 @@
     "watch": "vite build --watch",
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\" --fix",
+    "lint:check": "eslint \"src/**/*.ts\"",
     "format": "prettier --write \"src/**/*.{ts,vue}\"",
+    "test": "npm run type-check",
+    "smoke": "node --input-type=module -e \"await import('./dist/index.js'); await import('./dist/vite/index.js'); await import('./dist/host/index.js'); await import('./dist/host/vite.js')\"",
     "prepare": "vite build && vue-tsc --declaration --emitDeclarationOnly"
   },
   "peerDependencies": {

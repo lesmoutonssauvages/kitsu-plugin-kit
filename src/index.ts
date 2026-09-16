@@ -16,4 +16,4 @@ export type {
   KitsuStoreModuleDefinition
 } from './types.js'
 // Host UI helpers (`PluginsSlot`, …) are exported from
-// `kitsu-plugin-kit/host` so this entry's .d.ts stays plain TypeScript only.
+// `@lesmoutonssauvages/kitsu-plugin-kit/host` so this entry's .d.ts stays plain TypeScript only.
