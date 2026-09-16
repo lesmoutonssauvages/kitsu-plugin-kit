@@ -21,13 +21,13 @@ type VueOptions = Parameters<typeof vue>[0]
 
 /**
  * Dev alias target: kit sources, not prebuilt `dist/`.
- * Uses `kitsu-plugin-kit/vite` (a declared export) so this survives the kit's
+ * Uses `@lesmoutonssauvages/kitsu-plugin-kit/vite` (a declared export) so this survives the kit's
  * own lib build — `import.meta.url` + `../src/index.ts` gets evaluated at
  * bundle time and breaks in the published `dist/vite/index.js`.
  */
 const resolveKitSourceEntry = (frontendRoot: string): string => {
   const require = createRequire(path.join(frontendRoot, 'package.json'))
-  const viteEntry = require.resolve('kitsu-plugin-kit/vite')
+  const viteEntry = require.resolve('@lesmoutonssauvages/kitsu-plugin-kit/vite')
   return path.join(path.dirname(viteEntry), '..', '..', 'src', 'index.ts')
 }
 
@@ -109,7 +109,8 @@ export const defineKitsuPluginConfig = (
           return {
             resolve: {
               alias: {
-                'kitsu-plugin-kit': resolveKitSourceEntry(frontendRoot)
+                '@lesmoutonssauvages/kitsu-plugin-kit':
+                  resolveKitSourceEntry(frontendRoot)
               }
             }
           }

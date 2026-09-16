@@ -1,4 +1,4 @@
-# kitsu-plugin-kit
+# @lesmoutonssauvages/kitsu-plugin-kit
 
 Authoring and host runtime for **injected** Kitsu frontend plugins: Vue
 bundles that run inside the Kitsu app (shared Vue / router / Vuex / i18n)
@@ -18,10 +18,10 @@ Package layout:
 
 | Import | Role |
 | ------ | ---- |
-| `kitsu-plugin-kit` | Plugin authoring (`definePlugin`, store/context helpers) |
-| `kitsu-plugin-kit/vite` | Plugin Vite config (`defineKitsuPluginConfig`) |
-| `kitsu-plugin-kit/host` | Kitsu host (`kitsuPlugins`, `PluginHost`, `PluginsSlot`) |
-| `kitsu-plugin-kit/host/vite` | Host Vite helper (`kitsuPluginsDev`) |
+| `@lesmoutonssauvages/kitsu-plugin-kit` | Plugin authoring (`definePlugin`, store/context helpers) |
+| `@lesmoutonssauvages/kitsu-plugin-kit/vite` | Plugin Vite config (`defineKitsuPluginConfig`) |
+| `@lesmoutonssauvages/kitsu-plugin-kit/host` | Kitsu host (`kitsuPlugins`, `PluginHost`, `PluginsSlot`) |
+| `@lesmoutonssauvages/kitsu-plugin-kit/host/vite` | Host Vite helper (`kitsuPluginsDev`) |
 
 This package uses **npm** (`package-lock.json`). Install with `npm install`.
 After editing `src/`, run `npm run build` (or `npm run watch`), and
@@ -45,7 +45,7 @@ imperative APIs on `setup` context):
 
 ```ts
 // src/index.ts
-import { definePlugin } from 'kitsu-plugin-kit'
+import { definePlugin } from '@lesmoutonssauvages/kitsu-plugin-kit'
 
 import ActionPanelExtraAfter from './components/ActionPanelExtraAfter.vue'
 import ActionPanelExtraBefore from './components/ActionPanelExtraBefore.vue'
@@ -161,7 +161,7 @@ In views, `usePluginStore()` talks to that module without the host path:
 
 ```vue
 <script setup lang="ts">
-import { usePluginStore } from 'kitsu-plugin-kit'
+import { usePluginStore } from '@lesmoutonssauvages/kitsu-plugin-kit'
 
 const { state, commit, dispatch } = usePluginStore<MyState>()
 commit('patch', { name: 'x' })
@@ -178,7 +178,7 @@ A second module can still be registered in `setup` via
 
 ```vue
 <script setup lang="ts">
-import { usePluginContext } from 'kitsu-plugin-kit'
+import { usePluginContext } from '@lesmoutonssauvages/kitsu-plugin-kit'
 
 const context = usePluginContext()
 // context.value.pluginId / manifest / store / productionId / storeModuleName / ...
@@ -257,7 +257,7 @@ HMR the value is cleared.
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vite'
-import { defineKitsuPluginConfig } from 'kitsu-plugin-kit/vite'
+import { defineKitsuPluginConfig } from '@lesmoutonssauvages/kitsu-plugin-kit/vite'
 
 export default defineConfig(defineKitsuPluginConfig())
 ```
