@@ -1,6 +1,6 @@
 {
   "name": "@lesmoutonssauvages/kitsu-plugin-kit",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "description": "Authoring kit and Kitsu host runtime for injected frontend plugins (routes, Vuex, UI slots, provide/inject providers).",
   "repository": {
@@ -53,7 +53,8 @@
     "format": "prettier --write \"src/**/*.{ts,vue}\"",
     "test": "npm run type-check",
     "smoke": "node --input-type=module -e \"await import('./dist/index.js'); await import('./dist/vite/index.js'); await import('./dist/host/index.js'); await import('./dist/host/vite.js')\"",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "postinstall": "npm run build"
   },
   "peerDependencies": {
     "vue": "^3.5.0",
